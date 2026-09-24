@@ -1,8 +1,8 @@
 # Project conventions
 
 - The primary Git branch is always `master`.
-- Every commit must use Conventional Commits and Gitmoji. Put the emoji after
-  the type and optional scope: `feat: ✨ add migration support`.
+- Every commit must use Gitmoji followed by a Conventional Commit with a scope:
+  `✨ feat(scope): add profile migration`. Always put the emoji first.
 - Use English for code comments, docstrings, identifiers, variable names,
   function names, CLI messages and commit descriptions, even when discussing
   the work in German.

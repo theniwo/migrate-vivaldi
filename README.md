@@ -119,12 +119,12 @@ Die Tests verwenden ausschließlich synthetische Daten und prüfen unter anderem
 das Zusammenführen der Metadaten, fehlende Bilder, den Prozessschutz, den
 Prüfmodus und die Wiederherstellung nach einem simulierten Schreibfehler.
 
-Commits kombinieren Conventional Commits mit Gitmoji im Beschreibungsteil:
+Commits beginnen mit Gitmoji, gefolgt von Conventional Commits mit Scope:
 
 ```text
-feat: ✨ add workspace and thumbnail migration
-test: ✅ cover backup and rollback
-docs: 📝 document RPM to Flatpak migration
+✨ feat(migration): add workspace and thumbnail migration
+✅ test(migration): cover backup and rollback
+📝 docs(usage): document RPM to Flatpak migration
 ```
 
 Persönliche Profile, Berichte und Sicherungen gehören nicht ins Repository.
