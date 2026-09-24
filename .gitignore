@@ -1,0 +1,25 @@
+# Browser data and migration output must never be committed.
+vivaldi-old/
+vivaldi-new/
+profiles/
+prepared/
+backup*/
+**/vivaldi-transfer-backups/
+**/.vivaldi-prepare-*/
+**/migration-report.json
+transfer-report.json
+**/Preferences
+**/Secure Preferences
+**/Bookmarks
+**/Sessions/
+**/SyncedFiles/
+**/VivaldiThumbnails/
+**/Local State
+**/Cookies*
+**/Login Data*
+**/History*
+__pycache__/
+*.py[cod]
+.venv/
+.idea/
+.vscode/
