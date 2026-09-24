@@ -13,7 +13,11 @@ getestet; Vivaldis interne Dateiformate können sich ändern.
 - Arbeitsbereichsdefinitionen aus `Preferences`; sonstige Einstellungen stammen
   aus dem neuen Profil.
 - Der gesamte alte Ordner `Sessions`, einschließlich Tabs und gespeicherter
-  Sitzungen. Er ersetzt den neuen Sitzungsstand.
+  Sitzungen. Er ersetzt den neuen Sitzungsstand. Fehlende Tabgruppennamen in
+  `Session_*` werden aus historischen `Session_*`- und `.bin`-Dateien ergänzt,
+  sofern Gruppen-ID und Arbeitsbereichs-ID übereinstimmen und alle gefundenen
+  Namen für diese Zuordnung identisch sind. Bereits benannte Gruppen bleiben
+  unverändert. Gruppen mit geänderten IDs werden nicht anhand von URLs erraten.
 - Thumbnailverweise innerhalb der bestehenden Lesezeichen. Namen, URLs und
   andere Metadaten bleiben aus dem neuen Profil erhalten.
 - Lokale Bilder aus `VivaldiThumbnails` und `SyncedFiles`, einschließlich der
@@ -104,6 +108,33 @@ python3 migrate_vivaldi.py install \
 
 Auch beim Wiederherstellen muss Vivaldi geschlossen sein. Der aktuelle Zustand
 wird erneut gesichert; vorhandene Sicherungen werden nicht überschrieben.
+
+## Fehlende Tabgruppennamen nachträglich wiederherstellen
+
+Vivaldi vollständig schließen und eine aktuelle Offline-Profilkopie erstellen.
+Mit der alten Kopie als Namensquelle lässt sich der aktuelle Stand reparieren:
+
+```bash
+python3 migrate_vivaldi.py prepare-names \
+  --history /pfad/zur/alten-kopie/Default \
+  --current /pfad/zur/aktuellen-kopie/Profil \
+  --output /pfad/zum/arbeitsverzeichnis/repaired
+```
+
+Das Ergebnis übernimmt den aktuellen Profilstand und ergänzt ausschließlich
+fehlende Gruppennamen in den Sitzungsdateien. Anschließend mit `install`
+wie oben prüfen und installieren; dabei wird der bisherige Stand gesichert.
+Der Bericht nennt wiederhergestellte Gruppen, geänderte Metadatensätze und
+Dateien sowie mehrdeutige historische Zuordnungen. Ein absichtlich gelöschter
+Name ist von einem verlorenen Namen nicht unterscheidbar und kann ebenfalls
+wiederhergestellt werden. Historische gespeicherte Sitzungen und geschlossene
+Tabs (`Tabs_*`) bleiben unverändert.
+
+Unterstützt werden unverschlüsselte SNSS-Versionen 1 und 3 mit Vivaldis
+Tab-Metadatenformat. Unbekannte oder beschädigte Formate führen zum Abbruch
+ohne fertiges Ausgabeverzeichnis. Die binäre Einrahmung folgt dem
+[Chromium-Sitzungsformat](https://chromium.googlesource.com/chromium/src/+/refs/tags/145.0.7632.38/components/sessions/core/command_storage_backend.cc);
+die Vivaldi-Metadatenstruktur wurde anhand der vorliegenden Offline-Kopien geprüft.
 
 ## Entwicklung
 

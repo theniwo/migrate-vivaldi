@@ -12,6 +12,8 @@ import shutil
 import sys
 import tempfile
 
+from session_names import recover_names
+
 ITEMS = ('Preferences', 'Bookmarks', 'Sessions', 'VivaldiThumbnails', 'SyncedFiles')
 BACKUP_DIRECTORY = 'vivaldi-transfer-backups'
 BACKUP_PREFIX = 'profile-'
@@ -175,17 +177,45 @@ def prepare(old, new, output):
                         missing.append({'name': node.get('name'), 'reference': reference})
         report = {'workspaces': len(workspaces['list']), 'updated_thumbnail_references': updated,
                   'available_local_image_references': available, 'missing_images': missing}
+        if fingerprint(staging / 'Sessions') != old_hashes['Sessions']:
+            raise ValueError('Session copy verification failed.')
+        report.update(recover_names(old / 'Sessions', staging / 'Sessions'))
         write_json(staging / REPORT_FILENAME, report)
         if old_hashes != validate(old) or new_hashes != validate(new):
             raise ValueError('Input profiles changed during preparation. Use offline copies.')
-        if fingerprint(staging / 'Sessions') != old_hashes['Sessions']:
-            raise ValueError('Session copy verification failed.')
         validate(staging)
         staging.rename(output)
     finally:
         if staging.exists():
             shutil.rmtree(staging)
     print(json.dumps(report, ensure_ascii=False, indent=2))
+    return report
+
+
+def prepare_names(history, current, output):
+    """Prepare a current profile with only missing session group names repaired."""
+    distinct_paths(history, current, output)
+    if output.exists():
+        raise ValueError('Output must not already exist.')
+    history_before = fingerprint(history / 'Sessions')
+    current_before = validate(current)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=PREPARATION_PREFIX, dir=output.parent))
+    try:
+        for name in ITEMS:
+            copy_item(current / name, staging / name)
+        if validate(staging) != current_before:
+            raise ValueError('Profile copy verification failed.')
+        report = recover_names(history / 'Sessions', staging / 'Sessions')
+        write_json(staging / REPORT_FILENAME, report)
+        if validate(current) != current_before or fingerprint(history / 'Sessions') != history_before:
+            raise ValueError('Input profiles changed during preparation. Use offline copies.')
+        validate(staging)
+        staging.rename(output)
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging)
+    print(json.dumps(report, indent=2))
     return report
 
 
@@ -246,6 +276,10 @@ def main():
     preparation.add_argument('--old', required=True, type=Path)
     preparation.add_argument('--new', required=True, type=Path)
     preparation.add_argument('--output', required=True, type=Path)
+    names = commands.add_parser('prepare-names', help='Recover missing group names while retaining the current profile')
+    names.add_argument('--history', required=True, type=Path)
+    names.add_argument('--current', required=True, type=Path)
+    names.add_argument('--output', required=True, type=Path)
     installation = commands.add_parser('install', help='Install prepared data or restore a backup')
     installation.add_argument('--source', required=True, type=Path)
     installation.add_argument('--target', required=True, type=Path)
@@ -257,6 +291,8 @@ def main():
         parser.error('Run as the profile owner, without sudo.')
     if args.command == 'prepare':
         prepare(args.old.expanduser().resolve(), args.new.expanduser().resolve(), args.output.expanduser().resolve())
+    elif args.command == 'prepare-names':
+        prepare_names(args.history.expanduser().resolve(), args.current.expanduser().resolve(), args.output.expanduser().resolve())
     else:
         install(args.source.expanduser().resolve(), args.target.expanduser().resolve(), args.dry_run)
 
